@@ -10,9 +10,14 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ChromeOptions
+from selenium.webdriver.common.action_chains import ActionChains
 
 login_url = "https://login.zhipin.com/?ka=header-login"
 recommend_url = "https://www.zhipin.com/web/boss/recommend"
+
+# By default, boss will recommend 15 persons in a page, if we need say
+# more hi, we need to scroll page down
+MAX_RECOMMEND = 15
 
 jobs = {
     "Python开发工程师 _ 北京  15-25K": {
@@ -21,7 +26,7 @@ jobs = {
             "本科", "硕士",
             "10-20K",
             "离职-随时到岗", "在职-月内到岗"],
-        "max_say_hi": 5
+        "max_say_hi": 1
 
     },
     "云迁移灾备产品Python研发工程师 _ 北京  20-35K": {
@@ -30,7 +35,7 @@ jobs = {
             "本科", "硕士",
             "10-20K", "20-50K",
             "离职-随时到岗", "在职-月内到岗"],
-        "max_say_hi": 5
+        "max_say_hi": 20
     },
     "云迁移灾备产品实施工程师 _ 北京  12-18K": {
         "filters": [
@@ -38,7 +43,7 @@ jobs = {
             "大专", "本科",
             "10-20K",
             "离职-随时到岗", "在职-月内到岗"],
-        "max_say_hi": 5
+        "max_say_hi": 15
     }
 }
 
@@ -53,7 +58,7 @@ browser.implicitly_wait(10)
 browser.get(login_url)
 browser.find_element_by_css_selector("div.btn-switch").click()
 
-WebDriverWait(browser, 10).until(
+WebDriverWait(browser, 100).until(
     EC.visibility_of_element_located((By.CSS_SELECTOR, ".chat-weclcome-warp"))
 )
 
@@ -83,7 +88,7 @@ for job, conditions in jobs.items():
     # Click to close dropdown filter
     #browser.find_element_by_css_selector(".ui-icon-arrow-down").click()
 
-    WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 100).until(
         # Use wait for frame 
         EC.frame_to_be_available_and_switch_to_it((By.NAME, "recommendFrame"))
         #EC.visibility_of_element_located((By.CSS_SELECTOR, ".dropdown-recommend"))
@@ -99,10 +104,23 @@ for job, conditions in jobs.items():
         browser.find_element_by_xpath(xpath).click()
         time.sleep(2)
     browser.find_element_by_css_selector(".btn-sure").click()
+    time.sleep(2)
 
-    # Scroll page down
-    browser.execute_script("window.scrollTo(0,document.body.scrollHeight)")
-    time.sleep(3)
+    scroll_down_times = max_say_hi // MAX_RECOMMEND
+    print("Need to scroll %s time(s) to "
+          "get more records." % scroll_down_times)
+
+    if scroll_down_times > 0:
+        for i in range(0, scroll_down_times):
+            print("Trying %s time(s) to scroll down to "
+                  "get more records..." % i)
+            # Move to loadmore area and trigger load more records
+            load_more_element = browser.find_element_by_css_selector(
+                ".loadmore")
+            action = ActionChains(browser)
+            action.move_to_element(load_more_element).perform()
+            time.sleep(2)
+
 
     # Say Hi to all recommenders
     more = True
@@ -114,18 +132,26 @@ for job, conditions in jobs.items():
     while(more):
         hi_buttons = browser.find_elements_by_xpath(hi_button_xpath)
         find_count = len(hi_buttons)
-        print("Filter %s to say hi" % count)
+        print("Find %s persons to say hi" % find_count)
+
+        # Page move back to button postiion
+        if say_hi_count == 0:
+            action = ActionChains(browser)
+            action.move_to_element(hi_buttons[0]).perform()
+            time.sleep(2)
 
         if find_count > 0:
-            print("Say hi to %s and total count %s" % (
-                hi_buttons[0], say_hi_count))
             hi_buttons[0].click()
             say_hi_count = say_hi_count + 1
+            print("Say hi to %s and total count %s" % (
+                hi_buttons[0], say_hi_count))
 
-        if find_count == 1 or say_hi_count == max_say_hi:
+        # if say_hi_count equals find total count or say_hi_count
+        # equals max_say_hi count, then exit
+        if find_count == say_hi_count or say_hi_count == max_say_hi:
             more = False
 
-        time.sleep(2)
+        time.sleep(3)
 
     # Wait after each job finish
     time.sleep(5)
