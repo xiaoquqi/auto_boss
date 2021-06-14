@@ -26,7 +26,7 @@ jobs = {
             "本科", "硕士",
             "10-20K",
             "离职-随时到岗", "在职-月内到岗"],
-        "max_say_hi": 35
+        "max_say_hi": 25
 
     },
     "云迁移灾备产品Python研发工程师 _ 北京  20-35K": {
@@ -35,7 +35,7 @@ jobs = {
             "本科", "硕士",
             "10-20K", "20-50K",
             "离职-随时到岗", "在职-月内到岗"],
-        "max_say_hi": 35
+        "max_say_hi": 25
     },
     "云迁移灾备产品实施工程师 _ 北京  12-18K": {
         "filters": [
@@ -43,6 +43,14 @@ jobs = {
             "大专", "本科",
             "10-20K",
             "离职-随时到岗", "在职-月内到岗"],
+        "max_say_hi": 20
+    },
+    "DevOps运维工程师 _ 北京  12-18K": {
+        "filters": [
+            "3-5年",
+            "大专", "本科",
+            "10-20K",
+            "离职-随时到岗"],
         "max_say_hi": 30
     }
 }
@@ -131,14 +139,14 @@ for job, conditions in jobs.items():
     hi_button_xpath="//div[@id='recommend-list']//button[contains(text(), '打招呼')]"
     while(more):
         hi_buttons = browser.find_elements_by_xpath(hi_button_xpath)
-        find_count = len(hi_buttons)
-        print("Find %s persons to say hi" % find_count)
 
         # Page move back to button postiion
         if say_hi_count == 0:
             action = ActionChains(browser)
             action.move_to_element(hi_buttons[0]).perform()
             time.sleep(2)
+            find_count = len(hi_buttons)
+            print("Find %s persons to say hi" % find_count)
 
         if find_count > 0:
             hi_buttons[0].click()
