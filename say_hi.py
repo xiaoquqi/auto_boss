@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import configparser
 import json
 import time
+import sys
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -18,42 +20,21 @@ recommend_url = "https://www.zhipin.com/web/boss/recommend"
 # By default, boss will recommend 15 persons in a page, if we need say
 # more hi, we need to scroll page down
 MAX_RECOMMEND = 15
+JOB_CONF = "boss_jobs.conf"
 
-jobs = {
-    "Python开发工程师 _ 北京  15-25K": {
-        "filters": [
-            "1-3年", "3-5年",
-            "本科", "硕士",
-            "10-20K",
-            "离职-随时到岗", "在职-月内到岗"],
-        "max_say_hi": 25
+# Get jobs and filter from config file
+jobs = {}
 
-    },
-    "云迁移灾备产品Python研发工程师 _ 北京  20-35K": {
-        "filters": [
-            "3-5年", "5-10年",
-            "本科", "硕士",
-            "10-20K", "20-50K",
-            "离职-随时到岗", "在职-月内到岗"],
-        "max_say_hi": 25
-    },
-    "云迁移灾备产品实施工程师 _ 北京  12-18K": {
-        "filters": [
-            "1-3年", "3-5年",
-            "大专", "本科",
-            "10-20K",
-            "离职-随时到岗", "在职-月内到岗"],
-        "max_say_hi": 20
-    },
-    "DevOps运维工程师 _ 北京  12-18K": {
-        "filters": [
-            "3-5年",
-            "大专", "本科",
-            "10-20K",
-            "离职-随时到岗"],
-        "max_say_hi": 30
+config = configparser.ConfigParser()
+config.read(JOB_CONF)
+
+for job_name in config.sections():
+    jobs[job_name] = {
+        "filters": config[job_name]["filters"].split(","),
+        "max_say_hi": config.getint(job_name, "max_say_hi")
     }
-}
+
+print("Jobs: %s" % jobs)
 
 options = ChromeOptions()
 options.add_experimental_option('excludeSwitches', ['enable-automation'])
