@@ -1,2 +1,4 @@
 venv
 boss_jobs.conf
+*.pyc
+__pycache__
