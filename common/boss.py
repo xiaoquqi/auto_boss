@@ -14,6 +14,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 
 LOGIN_URL = "https://login.zhipin.com/?ka=header-login"
 RECOMMEND_URL = "https://www.zhipin.com/web/boss/recommend"
+# 牛人管理页面，默认未开通，需要在设置开通
+GEEK_URL = "https://www.zhipin.com/web/boss/geek-manage/geek"
 
 # By default, boss will recommend 15 persons in a page, if we need say
 # more hi, we need to scroll page down
@@ -44,6 +46,9 @@ class Boss(object):
 
     def goto_recommend_page(self):
         self._goto_page(RECOMMEND_URL)
+
+    def goto_geek_page(self):
+        self._goto_page(GEEK_URL)
 
     def filter_job_name(self, job):
         """Switch to recommend page first"""
@@ -125,6 +130,32 @@ class Boss(object):
 
             time.sleep(3)
 
+    def get_cv(self):
+        self.goto_geek_page()
+
+        # Ensure we can get filters
+        WebDriverWait(self.browser, 100).until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, ".flow-tabs"))
+        )
+
+        # get 沟通中 div
+        filter_xpath = "//div[contains(text(), '沟通中')]"
+        self.browser.find_element_by_xpath(filter_xpath).click()
+
+        # Only find no CV found
+        no_cv_xpath = "//td[not(contains(@class, 'ui-tablepro-hidden'))]//div[contains(@class, 'column-resume') and not(contains(@class, 'resume-visible'))]/i[contains(@class, 'iboss-jianli')]"
+        no_cvs = self.browser.find_elements_by_xpath(no_cv_xpath)
+
+        for cv in no_cvs:
+            logging.info("Ask CV for %s", cv)
+            self._move_to_element_click(cv)
+
+            btn_xpath = "//div[contains(@class, 'dialog-exchange')]//span[contains(text(), '确定') and contains(@ka, 'dialog_sure')]"
+            sure_element = self.browser.find_element_by_xpath(btn_xpath)
+            print(sure_element)
+            self._move_to_element_click(sure_element)
+
     def _goto_page(self, page_url):
         logging.info("Goto page %s" % page_url)
         self.browser.get(page_url)
@@ -145,3 +176,8 @@ class Boss(object):
             css_selector)
         action = ActionChains(self.browser)
         action.move_to_element(scroll_element).perform()
+
+    def _move_to_element_click(self, element):
+        action = ActionChains(self.browser)
+        action.move_to_element(element).click().perform()
+        time.sleep(2)
