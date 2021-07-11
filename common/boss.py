@@ -143,18 +143,18 @@ class Boss(object):
         filter_xpath = "//div[contains(text(), '沟通中')]"
         self.browser.find_element_by_xpath(filter_xpath).click()
 
-        # Only find no CV found
-        no_cv_xpath = "//td[not(contains(@class, 'ui-tablepro-hidden'))]//div[contains(@class, 'column-resume') and not(contains(@class, 'resume-visible'))]/i[contains(@class, 'iboss-jianli')]"
-        no_cvs = self.browser.find_elements_by_xpath(no_cv_xpath)
+        # Only find no CV found, use ancestor::tr found parent tr
+        no_cv_tr_xpath = "//td[not(contains(@class, 'ui-tablepro-hidden'))]//div[contains(@class, 'column-resume') and not(contains(@class, 'resume-visible'))]/i[contains(@class, 'iboss-jianli')]/ancestor::tr"
+        no_cv_trs = self.browser.find_elements_by_xpath(no_cv_tr_xpath)
 
-        for cv in no_cvs:
-            logging.info("Ask CV for %s", cv)
-            self._move_to_element_click(cv)
+        #for cv in no_cvs:
+        #    logging.info("Ask CV for %s", cv)
+        #    self._move_to_element_click(cv)
 
-            btn_xpath = "//div[contains(@class, 'dialog-exchange')]//span[contains(text(), '确定') and contains(@ka, 'dialog_sure')]"
-            sure_element = self.browser.find_element_by_xpath(btn_xpath)
-            print(sure_element)
-            self._move_to_element_click(sure_element)
+        #    btn_xpath = "//div[contains(@class, 'dialog-exchange')]//span[contains(text(), '确定') and contains(@ka, 'dialog_sure')]"
+        #    sure_element = self.browser.find_element_by_xpath(btn_xpath)
+        #    print(sure_element)
+        #    self._move_to_element_click(sure_element)
 
     def _goto_page(self, page_url):
         logging.info("Goto page %s" % page_url)
