@@ -60,9 +60,6 @@ class Boss(object):
         self.browser.find_element_by_css_selector(
             ".chat-select-job").click()
 
-        job_xpath = "//span[contains(text(), '%s')]" % job
-        self.browser.find_element_by_xpath(job_xpath).click()
-
         # Select job
         job_xpath = "//span[contains(text(), '%s')]" % job
         self.browser.find_element_by_xpath(job_xpath).click()
