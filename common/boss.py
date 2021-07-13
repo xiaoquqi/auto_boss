@@ -33,6 +33,9 @@ class Boss(object):
         # Wait after each find
         self.browser.implicitly_wait(10)
 
+        # Max window
+        self.browser.maximize_window()
+
     def wait_scan_login(self):
         """Switch to scan QRCode page and wait to login"""
         # Switch to QRCode and wait for login
@@ -131,6 +134,11 @@ class Boss(object):
             time.sleep(3)
 
     def get_cv(self):
+        """Get cv for communicating persons
+
+        1. Get how many pages
+        2. Ask cv in each page
+        """
         self.goto_geek_page()
 
         # Ensure we can get filters
@@ -143,18 +151,37 @@ class Boss(object):
         filter_xpath = "//div[contains(text(), '沟通中')]"
         self.browser.find_element_by_xpath(filter_xpath).click()
 
+        # get pages
+        total_page = self._get_total_page()
+
+        for page in range(total_page):
+            cur_page = page + 1
+            next_page = cur_page + 1
+            logging.info("Current page is %s" % cur_page)
+
+            self.ask_cv()
+
+            # Not click next when first page and last page
+            if cur_page > 1 and next_page < total_page:
+                logging.info("Moving to page %s" % next_page)
+                self._page_next()
+
+    def ask_cv(self):
+        """Ask cv for person"""
+
         # Only find no CV found, use ancestor::tr found parent tr
-        no_cv_tr_xpath = "//td[not(contains(@class, 'ui-tablepro-hidden'))]//div[contains(@class, 'column-resume') and not(contains(@class, 'resume-visible'))]/i[contains(@class, 'iboss-jianli')]/ancestor::tr"
-        no_cv_trs = self.browser.find_elements_by_xpath(no_cv_tr_xpath)
+        #no_cv_talk_xpath = "//td[not(contains(@class, 'ui-tablepro-hidden'))]//div[contains(@class, 'column-resume') and not(contains(@class, 'resume-visible'))]/i[contains(@class, 'iboss-jianli')]/ancestor::tr//div[contains(@class, 'operate-item')]/div[contains(text(), '沟通')]"
+        no_cv_talk_xpath = "//td[not(contains(@class, 'ui-tablepro-hidden'))]//div[contains(@class, 'column-resume') and not(contains(@class, 'resume-visible'))]/i[contains(@class, 'iboss-jianli')]"
+        no_cvs = self.browser.find_elements_by_xpath(no_cv_talk_xpath)
 
-        #for cv in no_cvs:
-        #    logging.info("Ask CV for %s", cv)
-        #    self._move_to_element_click(cv)
+        for talk in no_cvs:
+            logging.debug("Found and click talk: %s" % talk)
+            self._move_to_element_click(talk)
 
-        #    btn_xpath = "//div[contains(@class, 'dialog-exchange')]//span[contains(text(), '确定') and contains(@ka, 'dialog_sure')]"
-        #    sure_element = self.browser.find_element_by_xpath(btn_xpath)
-        #    print(sure_element)
-        #    self._move_to_element_click(sure_element)
+            btn_xpath = "//div[contains(@class, 'dialog-exchange')]//span[contains(text(), '确定') and contains(@ka, 'dialog_sure')]"
+            sure_element = self.browser.find_element_by_xpath(btn_xpath)
+            logging.debug("Found and click sure: %s" % sure_element)
+            self._move_to_element_click(sure_element)
 
     def _goto_page(self, page_url):
         logging.info("Goto page %s" % page_url)
@@ -181,3 +208,14 @@ class Boss(object):
         action = ActionChains(self.browser)
         action.move_to_element(element).click().perform()
         time.sleep(2)
+
+    def _get_total_page(self):
+        page_xpath = "//div[contains(@class, 'options-pages')]/a[last()-1]"
+        total_page_element = self.browser.find_element_by_xpath(page_xpath)
+        total_page = int(total_page_element.get_attribute("innerHTML"))
+        return total_page
+
+    def _page_next(self):
+        page_next_xpath = "//div[contains(@class, 'options-pages')]/a[last()]"
+        next_page_element = self.browser.find_element_by_xpath(page_next_xpath)
+        self._move_to_element_click(next_page_element)
