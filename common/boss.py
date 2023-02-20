@@ -40,12 +40,18 @@ class Boss(object):
         """Switch to scan QRCode page and wait to login"""
         # Switch to QRCode and wait for login
         self._goto_page(LOGIN_URL)
-        self.browser.find_element_by_css_selector("div.btn-switch").click()
+        #self.browser.find_element_by_css_selector("div.btn-switch").click()
 
         WebDriverWait(self.browser, 100).until(
             EC.visibility_of_element_located(
                 (By.CSS_SELECTOR, ".chat-weclcome-warp"))
         )
+
+    def close_download_dialog(self):
+        close_xpath = "//idv[contains(@class, 'dialog-bosszp-download')]//i[contains(@class, 'icon-close')]"
+        dialog_close = self.browser.find_element_by_xpath(close_xpath)
+        if dialog_close:
+            dialog_close.click()
 
     def goto_recommend_page(self):
         self._goto_page(RECOMMEND_URL)
@@ -56,22 +62,27 @@ class Boss(object):
     def filter_job_name(self, job):
         """Switch to recommend page first"""
         self._switch_to_body()
+        self._switch_to_frame("recommendFrame")
         # Click dropdown filter first
-        self.browser.find_element_by_css_selector(
-            ".chat-select-job").click()
+
+        #self.browser.find_element_by_css_selector(
+        #    ".chat-select-job").click()
+        #btn_xpath = "//div[contains(@class, 'dialog-exchange')]//span[contains(text(), '确定') and contains(@ka, 'dialog_sure')]"
+        job_filter_xpath = "//div[contains(@class, 'job-selecter-wrap')]/div[contains(@class, 'ui-dropmenu-label')]"
+        self.browser.find_element_by_xpath(job_filter_xpath).click()
 
         # Select job
         job_xpath = "//span[contains(text(), '%s')]" % job
         self.browser.find_element_by_xpath(job_xpath).click()
 
-        self._switch_to_frame("recommendFrame")
+    def filter_persons(self, filters):
+        """Switch to recommend page first"""
 
         # Filter by filters
+        time.sleep(2)
         self.browser.find_element_by_css_selector(
             ".recommend-filter").click()
 
-    def filter_persons(self, filters):
-        """Switch to recommend page first"""
         for f in filters:
             xpath = "//dd/a/span[contains(text(), '%s')]" % f
             logging.info("Clicking contition xpath %s" % xpath)
@@ -191,7 +202,7 @@ class Boss(object):
 
     def _switch_to_frame(self, frame_name):
         WebDriverWait(self.browser, 100).until(
-            # Use wait for frame 
+            # Use wait for frame
             EC.frame_to_be_available_and_switch_to_it((By.NAME, frame_name))
         )
 

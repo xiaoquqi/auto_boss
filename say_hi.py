@@ -29,6 +29,7 @@ logging.info("Jobs: %s" % jobs)
 
 boss = Boss()
 boss.wait_scan_login()
+#boss.close_download_dialog()
 
 boss.goto_recommend_page()
 
